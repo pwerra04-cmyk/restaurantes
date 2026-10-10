@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú - Restaurante Markopollo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rye&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #fdf8f5; }
+        .font-title { font-family: 'Rye', cursive; }
+        
+        /* Ocultar scrollbar para un look más de app móvil */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        
+        .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
+        .modal-leave { animation: fadeOut 0.3s ease-in forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(20px); } }
+    </style>
+</head>
+<body class="text-gray-800 pb-24">
+
+    <header class="bg-red-800 text-white shadow-lg sticky top-0 z-10">
+        <div class="bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] px-4 py-6 text-center border-b-4 border-yellow-500">
+            <h1 class="font-title text-4xl md:text-5xl text-yellow-400 drop-shadow-md tracking-wider">MARKOPOLLO</h1>
+            <p class="text-sm md:text-base font-semibold mt-2 text-white/90 italic">¡Sabor casero, como en casa!</p>
+            <div class="flex items-center justify-center gap-2 mt-3 text-xs font-medium text-yellow-200">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
+                Cra 6 #13-09, Barrio San Carlos
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 py-6 space-y-8">
+        
+        <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg shadow-sm">
+            <h3 class="font-bold text-yellow-800 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                ¿Qué incluye tu almuerzo?
+            </h3>
+            <p class="text-sm text-yellow-900 mt-2">
+                Nuestros platos ejecutivos y de la carta incluyen: 
+                <strong>Sopa del día, Alverja, Arroz, Ensalada fresca, Patacones y Limonada.</strong>
+            </p>
+        </div>
+
+        <!-- Contenedor dinámico del menú -->
+        <div id="menu-container" class="space-y-8"></div>
+    </main>
+
+    <div id="cart-bar" class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 transform translate-y-full transition-transform duration-300 z-40 hidden">
+        <div class="max-w-3xl mx-auto flex justify-between items-center">
+            <div>
+                <p class="text-sm text-gray-500 font-medium">Total de tu pedido</p>
+                <p id="cart-total-preview" class="text-2xl font-bold text-red-700">$0</p>
+            </div>
+            <button onclick="openCheckout()" class="bg-red-600 text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-red-700 active:scale-95 transition-all flex items-center gap-2">
+                Ver Pedido
+                <div id="cart-badge" class="bg-white text-red-600 rounded-full w-6 h-6 flex items-center justify-center text-xs">0</div>
+            </button>
+        </div>
+    </div>
+
+    <div id="checkout-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex flex-col justify-end sm:justify-center items-center backdrop-blur-sm">
+        <div class="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl max-h-[90vh] flex flex-col overflow-hidden modal-enter">
+            <!-- Header Modal -->
+            <div class="px-5 py-4 border-b flex justify-between items-center bg-gray-50">
+                <h2 class="text-lg font-bold text-gray-800">Tu Pedido</h2>
+                <button onclick="closeCheckout()" class="text-gray-400 hover:text-gray-600 p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <!-- Cuerpo Modal (Scrollable) -->
+            <div class="px-5 py-4 overflow-y-auto flex-1 text-sm text-gray-700">
+                <ul id="checkout-items" class="space-y-3 mb-6"></ul>
+                
+                <div class="border-t pt-4 space-y-4">
+                    <label class="flex items-start gap-3 cursor-pointer bg-red-50 p-3 rounded-lg border border-red-100">
+                        <input type="checkbox" id="takeout-checkbox" class="mt-1 w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500" onchange="updateCartUI()">
+                        <div>
+                            <span class="font-bold text-red-800 block">Pedido para llevar</span>
+                            <span class="text-xs text-red-600">+$2,000 por cada almuerzo</span>
+                        </div>
+                    </label>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Nombre (Opcional)</label>
+                        <input type="text" id="customer-name" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 px-3 py-2 border" placeholder="¿Quién hace el pedido?">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">Notas (Opcional)</label>
+                        <textarea id="order-notes" rows="2" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 px-3 py-2 border" placeholder="Ej: Sin cebolla, la mojarra bien frita..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Modal -->
+            <div class="px-5 py-4 border-t bg-gray-50">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="font-bold text-gray-600">Subtotal:</span>
+                    <span id="modal-subtotal" class="font-semibold text-gray-800">$0</span>
+                </div>
+                <div class="flex justify-between items-center mb-4 text-red-600 hidden" id="takeout-fee-row">
+                    <span class="font-bold">Empaques (llevar):</span>
+                    <span id="modal-takeout-fee" class="font-semibold">+$0</span>
+                </div>
+                <div class="flex justify-between items-center mb-6">
+                    <span class="font-extrabold text-lg">Total a Pagar:</span>
+                    <span id="modal-total" class="font-extrabold text-2xl text-red-700">$0</span>
+                </div>
+                
+                <button onclick="sendWhatsAppOrder()" class="w-full bg-[#25D366] hover:bg-[#1ebd5a] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-95">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                    Pedir por WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg text-sm transition-opacity duration-300 opacity-0 pointer-events-none z-50">
+        Producto añadido
+    </div>
+
+    <script>
+        // Datos del menú
+        const menuData = [
+            {
+                category: 'EJECUTIVOS',
+                icon: '⭐',
+                items: [
+                    { id: 'e1', name: 'Carne Plancha', price: 14000, isMeal: true },
+                    { id: 'e2', name: 'Carne basilico', price: 15000, isMeal: true },
+                    { id: 'e3', name: 'Carne bistec', price: 16000, isMeal: true },
+                    { id: 'e4', name: 'Pechuga Plancha', price: 14000, isMeal: true },
+                    { id: 'e5', name: 'Milanesa Pechuga', price: 14000, isMeal: true },
+                    { id: 'e6', name: 'Hígado', price: 14000, isMeal: true },
+                    { id: 'e7', name: 'Lomo cerdo', price: 14000, isMeal: true },
+                    { id: 'e8', name: 'Albóndigas', price: 14000, isMeal: true },
+                    { id: 'e9', name: 'Lomito mojarra (apanado)', price: 14000, isMeal: true },
+                    { id: 'e10', name: 'Pollo (apanado - Frito - Sudado)', price: 15000, isMeal: true }
+                ]
+            },
+            {
+                category: 'CARTA',
+                icon: '👑',
+                items: [
+                    { id: 'c1', name: 'Mojarra frita', price: 25000, isMeal: true },
+                    { id: 'c2', name: 'Mojarra frita sudada', price: 30000, isMeal: true },
+                    { id: 'c3', name: 'Cordon blue cerdo', price: 20000, isMeal: true },
+                    { id: 'c4', name: 'Cordon blue pechuga', price: 20000, isMeal: true },
+                    { id: 'c5', name: 'Costillas BBQ', price: 20000, isMeal: true },
+                    { id: 'c6', name: 'Pechuga (Hawaiana - Gratinada)', price: 20000, isMeal: true }
+                ]
+            },
+            {
+                category: 'BEBIDAS',
+                icon: '🥤',
+                items: [
+                    { id: 'b1', name: 'Agua', price: 3000, isMeal: false },
+                    { id: 'b2', name: 'Cerveza', price: 4000, isMeal: false },
+                    { id: 'b3', name: 'Cola y Pola', price: 4000, isMeal: false },
+                    { id: 'b4', name: 'Té', price: 3000, isMeal: false }
+                ]
+            }
+        ];
+
+        // Estado del carrito { id_item: { quantity, data } }
+        let cart = {};
+        const WHATSAPP_NUMBER = "573508737961"; 
+        const TAKEOUT_FEE = 2000;
+
+        // Formateador de moneda colombiana
+        const formatter = new Intl.NumberFormat('es-CO', {
+            style: 'currency',
+            currency: 'COP',
+            minimumFractionDigits: 0
+        });
+
+        function renderMenu() {
+            const container = document.getElementById('menu-container');
+            let html = '';
+
+            menuData.forEach(section => {
+                html += `
+                <section class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="bg-red-800 text-white px-4 py-2 flex items-center gap-2">
+                        <span class="text-xl">${section.icon}</span>
+                        <h2 class="font-title text-2xl text-yellow-400 tracking-wide">${section.category}</h2>
+                    </div>
+                    <ul class="divide-y divide-gray-100">
+                `;
+
+                section.items.forEach(item => {
+                    html += `
+                    <li class="p-4 flex justify-between items-center hover:bg-gray-50 transition-colors">
+                        <div class="pr-4">
+                            <h4 class="font-semibold text-gray-800 text-sm md:text-base">${item.name}</h4>
+                            <p class="text-red-700 font-bold">${formatter.format(item.price)}</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center bg-gray-100 rounded-full h-8 overflow-hidden" id="ctrl-${item.id}" style="display: ${cart[item.id] ? 'flex' : 'none'}">
+                                <button onclick="updateQuantity('${item.id}', -1)" class="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-200 active:bg-gray-300">-</button>
+                                <span class="w-6 text-center font-bold text-sm" id="qty-${item.id}">${cart[item.id]?.quantity || 0}</span>
+                                <button onclick="updateQuantity('${item.id}', 1)" class="w-8 h-full flex items-center justify-center text-gray-600 hover:bg-gray-200 active:bg-gray-300">+</button>
+                            </div>
+                            <button id="add-${item.id}" onclick="updateQuantity('${item.id}', 1, true)" style="display: ${cart[item.id] ? 'none' : 'block'}" class="bg-yellow-400 text-yellow-900 px-4 py-1.5 rounded-full font-bold text-sm shadow-sm hover:bg-yellow-500 active:scale-95 transition-all">
+                                Agregar
+                            </button>
+                        </div>
+                    </li>
+                    `;
+                });
+
+                html += `</ul></section>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function getItemData(id) {
+            for (let section of menuData) {
+                const item = section.items.find(i => i.id === id);
+                if (item) return item;
+            }
+            return null;
+        }
+
+        function updateQuantity(id, change, showToastAnim = false) {
+            const itemData = getItemData(id);
+            if (!cart[id]) {
+                cart[id] = { quantity: 0, data: itemData };
+            }
+
+            cart[id].quantity += change;
+
+            if (cart[id].quantity <= 0) {
+                delete cart[id];
+            }
+
+            // Actualizar botones UI
+            const ctrl = document.getElementById(`ctrl-${id}`);
+            const addBtn = document.getElementById(`add-${id}`);
+            const qtySpan = document.getElementById(`qty-${id}`);
+
+            if (cart[id]) {
+                if (ctrl) ctrl.style.display = 'flex';
+                if (addBtn) addBtn.style.display = 'none';
+                if (qtySpan) qtySpan.textContent = cart[id].quantity;
+            } else {
+                if (ctrl) ctrl.style.display = 'none';
+                if (addBtn) addBtn.style.display = 'block';
+            }
+
+            if (showToastAnim) showToast(`¡${itemData.name} agregado!`);
+            
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const cartBar = document.getElementById('cart-bar');
+            let totalItems = 0;
+            let subtotal = 0;
+            let mealCount = 0;
+
+            for (const id in cart) {
+                totalItems += cart[cart[id].quantity > 0 ? id : null].quantity;
+                subtotal += cart[id].quantity * cart[id].data.price;
+                if (cart[id].data.isMeal) {
+                    mealCount += cart[id].quantity;
+                }
+            }
+
+            const isTakeout = document.getElementById('takeout-checkbox').checked;
+            const takeoutTotalFee = isTakeout ? (mealCount * TAKEOUT_FEE) : 0;
+            const grandTotal = subtotal + takeoutTotalFee;
+
+            // Update Floating Bar
+            document.getElementById('cart-total-preview').textContent = formatter.format(grandTotal);
+            document.getElementById('cart-badge').textContent = totalItems;
+
+            if (totalItems > 0) {
+                cartBar.classList.remove('hidden', 'translate-y-full');
+            } else {
+                cartBar.classList.add('translate-y-full');
+                setTimeout(() => cartBar.classList.add('hidden'), 300); // Wait for transition
+                if(!document.getElementById('checkout-modal').classList.contains('hidden')){
+                    closeCheckout(); // Cerrar modal si se vacía el carrito
+                }
+            }
+
+            // Update Checkout Modal
+            renderCheckoutItems();
+            document.getElementById('modal-subtotal').textContent = formatter.format(subtotal);
+            
+            const feeRow = document.getElementById('takeout-fee-row');
+            if (isTakeout && mealCount > 0) {
+                feeRow.classList.remove('hidden');
+                document.getElementById('modal-takeout-fee').textContent = `+${formatter.format(takeoutTotalFee)}`;
+            } else {
+                feeRow.classList.add('hidden');
+            }
+
+            document.getElementById('modal-total').textContent = formatter.format(grandTotal);
+        }
+
+        function renderCheckoutItems() {
+            const list = document.getElementById('checkout-items');
+            list.innerHTML = '';
+            
+            for (const id in cart) {
+                const item = cart[id];
+                list.innerHTML += `
+                    <li class="flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-bold">${item.quantity}x</span>
+                            <span>${item.data.name}</span>
+                        </div>
+                        <span class="font-semibold text-gray-800">${formatter.format(item.data.price * item.quantity)}</span>
+                    </li>
+                `;
+            }
+        }
+
+        function openCheckout() {
+            document.getElementById('checkout-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Evitar scroll de fondo
+        }
+
+        function closeCheckout() {
+            document.getElementById('checkout-modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+            }, 2000);
+        }
+
+        function sendWhatsAppOrder() {
+            const name = document.getElementById('customer-name').value.trim();
+            const notes = document.getElementById('order-notes').value.trim();
+            const isTakeout = document.getElementById('takeout-checkbox').checked;
+            
+            let text = `¡Hola Restaurante Markopollo! 🐔\nQuiero hacer el siguiente pedido:\n\n`;
+            
+            let mealCount = 0;
+            let subtotal = 0;
+
+            for (const id in cart) {
+                const item = cart[id];
+                text += `▪️ ${item.quantity}x ${item.data.name} - ${formatter.format(item.data.price * item.quantity)}\n`;
+                if(item.data.isMeal) mealCount += item.quantity;
+                subtotal += (item.data.price * item.quantity);
+            }
+
+            text += `\n`;
+            
+            const takeoutFee = isTakeout ? (mealCount * TAKEOUT_FEE) : 0;
+            const total = subtotal + takeoutFee;
+
+            if (isTakeout) {
+                text += `🛍️ *Para llevar:* Sí (+${formatter.format(takeoutFee)} empaques)\n`;
+            } else {
+                text += `🍽️ *Consumo:* En el restaurante\n`;
+            }
+
+            if (name) text += `👤 *A nombre de:* ${name}\n`;
+            if (notes) text += `📝 *Notas:* ${notes}\n`;
+
+            text += `\n💰 *Total a pagar:* ${formatter.format(total)}`;
+
+            // Codificar texto para URL
+            const encodedText = encodeURIComponent(text);
+            const whatsappURL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedText}`;
+            
+            // Abrir en nueva pestaña
+            window.open(whatsappURL, '_blank');
+        }
+
+        window.onload = function() {
+            renderMenu();
+        };
+    </script>
+</body>
+</html>
